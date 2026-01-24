@@ -1,0 +1,7 @@
+{
+  "name": "smart-checkin-client",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

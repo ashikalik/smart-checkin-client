@@ -1,0 +1,37 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      Smart Check-in
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="home-content">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Smart Check-in</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-progress-bar class="progress" [class.visible]="isStarting" type="indeterminate"></ion-progress-bar>
+
+  <div class="page" [class.loading]="isStarting">
+    <div class="conversation">
+      <ion-list>
+        <ion-item *ngFor="let line of conversation">
+          <ion-label>{{ line }}</ion-label>
+        </ion-item>
+      </ion-list>
+      <p class="current-query">{{currentQuery}}</p>
+    </div>
+
+    <div class="actions">
+      <ion-button (click)="start()" [disabled]="isStarting">
+        <ion-spinner *ngIf="isStarting" name="dots"></ion-spinner>
+        <span *ngIf="!isStarting">Start</span>
+      </ion-button>
+      <ion-button (click)="commit()" [disabled]="isStarting">Commit</ion-button>
+      <ion-button (click)="stop()" [disabled]="isStarting">Stop</ion-button>
+    </div>
+  </div>
+</ion-content>
