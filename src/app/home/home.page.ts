@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonButton, IonProgressBar, IonSpinner } from '@ionic/angular/standalone';
 import { Scribe, RealtimeEvents, RealtimeConnection } from "@elevenlabs/client";
+import { finalize } from 'rxjs';
+import { QueryService } from '../services/query.service';
 
 @Component({
   selector: 'app-home',
@@ -10,17 +12,18 @@ import { Scribe, RealtimeEvents, RealtimeConnection } from "@elevenlabs/client";
   imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonList, IonItem, IonLabel, IonProgressBar, IonSpinner],
 })
 export class HomePage {
-  private token!:RealtimeConnection | null;
-  private connection!:RealtimeConnection | null;
-  private tokenGenerationTime:number = 0;
+  private token!: RealtimeConnection | null;
+  private connection!: RealtimeConnection | null;
+  private tokenGenerationTime: number = 0;
   private readonly tokenExpirySeconds = 15 * 60;
-  public currentQuery:string = '';
-  public queryRepeatCount:number = 0;
-  public isStarting:boolean = false;
+  public currentQuery: string = '';
+  public queryRepeatCount: number = 0;
+  public isStarting: boolean = false;
+  public isSending: boolean = false;
 
   public conversation: string[] = [];
 
-  constructor() { }
+  constructor(private readonly queryService: QueryService) { }
 
   async start() {
     if (this.isStarting) return;
@@ -32,7 +35,7 @@ export class HomePage {
     }
   }
   commit() {
-    if(this.connection) {
+    if (this.connection) {
       this.connection.commit();
     }
   }
@@ -55,13 +58,13 @@ export class HomePage {
     if (!token) return;
 
     this.connect(token);
-    
+
   }
 
   async generateToken() {
-   const response = await fetch("https://n8n.srv1232458.hstgr.cloud/webhook/0d1d4ee5-7ef4-4d11-83ea-aca2e271feb1");
-   this.token = await response.json();
-   this.tokenGenerationTime = Math.floor(Date.now() / 1000)
+    const response = await fetch("https://n8n.srv1232458.hstgr.cloud/webhook/0d1d4ee5-7ef4-4d11-83ea-aca2e271feb1");
+    this.token = await response.json();
+    this.tokenGenerationTime = Math.floor(Date.now() / 1000)
   }
 
   getTokenLife(): number {
@@ -70,7 +73,7 @@ export class HomePage {
     return Math.max(0, this.tokenExpirySeconds - elapsed);
   }
 
-  public connect(token:string) {
+  public connect(token: string) {
     this.disconnect();
     this.connection = Scribe.connect({
       token,
@@ -86,32 +89,53 @@ export class HomePage {
   }
 
   disconnect() {
-    if(this.connection) {
+    if (this.connection) {
       this.connection.commit();
-      this.unsubscribeEvents();
       this.connection.close();
+      this.unsubscribeEvents();
+     
     }
     this.connection = null;
   }
 
-  setQuery(query:string) {
-    if(query === this.currentQuery) {
+  setQuery(query: string) {
+
+
+    if (query === this.currentQuery) {
       this.queryRepeatCount++;
     }
-    if(this.queryRepeatCount > 1) {
+    if (this.queryRepeatCount > 1) {
       this.commit();
     }
     this.currentQuery = query;
   }
 
-  resetQuery(query:string) {
+  commitQuery(query: string) {
+    if (this.isSending) return;
     this.conversation.push(query);
     this.currentQuery = '';
     this.queryRepeatCount = 0;
+
+    this.isSending = true;
+    this.queryService.sendQuery(query).pipe(
+      finalize(() => {
+        this.isSending = false;
+      })
+    ).subscribe({
+      next: (response) => {
+        const reply = (response as { response?: string })?.response;
+        if (reply) {
+          this.conversation.push(reply);
+        }
+      },
+      error: (error) => {
+        console.error('Query service error:', error);
+      }
+    });
   }
 
   subscribeEvents() {
-    if( !this.connection)
+    if (!this.connection)
       return;
 
     this.connection.on(RealtimeEvents.SESSION_STARTED, () => {
@@ -130,7 +154,7 @@ export class HomePage {
     this.connection.on(RealtimeEvents.COMMITTED_TRANSCRIPT_WITH_TIMESTAMPS, (data) => {
       console.log("Committed:", data.text);
       console.log("Timestamps:", data.words);
-      this.resetQuery(data.text);
+      this.commitQuery(data.text);
     });
     // Errors - will catch all errors, both server and websocket specific errors
     this.connection.on(RealtimeEvents.ERROR, (error) => {
@@ -147,7 +171,7 @@ export class HomePage {
   }
 
   unsubscribeEvents() {
-    if( !this.connection)
+    if (!this.connection)
       return;
 
     this.connection.off(RealtimeEvents.SESSION_STARTED, () => {

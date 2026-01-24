@@ -13,25 +13,26 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-progress-bar class="progress" [class.visible]="isStarting" type="indeterminate"></ion-progress-bar>
+  <ion-progress-bar class="progress" [class.visible]="isStarting || isSending" type="indeterminate"></ion-progress-bar>
 
-  <div class="page" [class.loading]="isStarting">
+  <div class="page" [class.loading]="isStarting || isSending">
     <div class="conversation">
       <ion-list>
         <ion-item *ngFor="let line of conversation">
           <ion-label>{{ line }}</ion-label>
         </ion-item>
       </ion-list>
-      <p class="current-query">{{currentQuery}}</p>
+     
     </div>
 
     <div class="actions">
-      <ion-button (click)="start()" [disabled]="isStarting">
+       <p class="current-query">{{currentQuery}}</p>
+      <ion-button (click)="start()" [disabled]="isStarting || isSending">
         <ion-spinner *ngIf="isStarting" name="dots"></ion-spinner>
         <span *ngIf="!isStarting">Start</span>
       </ion-button>
-      <ion-button (click)="commit()" [disabled]="isStarting">Commit</ion-button>
-      <ion-button (click)="stop()" [disabled]="isStarting">Stop</ion-button>
+      <ion-button (click)="commit()" [disabled]="isStarting || isSending">Commit</ion-button>
+      <ion-button (click)="stop()" [disabled]="isStarting || isSending">Stop</ion-button>
     </div>
   </div>
 </ion-content>
