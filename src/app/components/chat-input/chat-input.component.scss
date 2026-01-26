@@ -1,0 +1,60 @@
+.chat-footer {
+  --background: white;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.input-container {
+  padding: 12px 16px;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f5f5f5;
+  border-radius: 24px;
+  padding: 4px 4px 4px 16px;
+}
+
+.message-input {
+  flex: 1;
+  --padding-start: 0;
+  --padding-end: 0;
+  font-size: 15px;
+}
+
+.mic-button {
+  --color: #666;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  margin: 0;
+
+  &.listening {
+    --color: var(--etihad-gold);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+}
+
+.send-button {
+  --background: var(--etihad-gold);
+  --color: var(--etihad-charcoal);
+  --border-radius: 20px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  height: 40px;
+  margin: 0;
+  font-weight: 600;
+
+  &[disabled] {
+    opacity: 0.4;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}

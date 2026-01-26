@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonButton, IonProgressBar, IonSpinner } from '@ionic/angular/standalone';
 import { Scribe, RealtimeEvents, RealtimeConnection } from "@elevenlabs/client";
 import { finalize } from 'rxjs';
-import { QueryService } from '../services/query.service';
+import { QueryService } from '../../services/query.service';
 
 @Component({
   selector: 'app-home',
@@ -20,6 +20,7 @@ export class HomePage {
   public queryRepeatCount: number = 0;
   public isStarting: boolean = false;
   public isSending: boolean = false;
+  private sessionId: string = '';
 
   public conversation: string[] = [];
 
@@ -49,6 +50,9 @@ export class HomePage {
   }
 
   async startSession() {
+    if (!this.sessionId) {
+      this.sessionId = crypto.randomUUID();
+    }
     const remainingLife = this.getTokenLife();
     if (remainingLife < 5 * 60) {
       await this.generateToken();
@@ -93,7 +97,7 @@ export class HomePage {
       this.connection.commit();
       this.connection.close();
       this.unsubscribeEvents();
-     
+
     }
     this.connection = null;
   }
@@ -112,12 +116,14 @@ export class HomePage {
 
   commitQuery(query: string) {
     if (this.isSending) return;
+
     this.conversation.push(query);
     this.currentQuery = '';
     this.queryRepeatCount = 0;
 
     this.isSending = true;
-    this.queryService.sendQuery(query).pipe(
+    const fullConversation = this.conversation.join('\n');
+    this.queryService.sendQuery(fullConversation, this.sessionId).pipe(
       finalize(() => {
         this.isSending = false;
       })
@@ -126,6 +132,7 @@ export class HomePage {
         const reply = (response as { response?: string })?.response;
         if (reply) {
           this.conversation.push(reply);
+          this.isSending = false;
         }
       },
       error: (error) => {

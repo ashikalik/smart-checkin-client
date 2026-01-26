@@ -1,0 +1,384 @@
+{
+  "info": {
+    "name": "Smart Check-in Server API",
+    "description": "",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://unmicaceous-charlie-peacefully.ngrok-free.dev",
+      "type": "string"
+    },
+    {
+      "key": "mcpSessionId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Nginx Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orchestration API",
+      "item": [
+        {
+          "name": "Get API Root",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api",
+              "host": ["{{baseUrl}}"],
+              "path": ["api"]
+            },
+            "description": ""
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Hello API\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List MCP Tools",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/tools",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "tools"]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Run Orchestrator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"goal\": \"Calculate 15% of 200 and save the result\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/run",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "run"]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Run Agent Loop",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"goal\": \"What is 100 * 25?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orchestrator/agent-run",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orchestrator", "agent-run"]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "MCP Server API",
+      "item": [
+        {
+          "name": "1. Initialize MCP Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Extract session ID from response header",
+                  "var sessionId = pm.response.headers.get('mcp-session-id');",
+                  "if (sessionId) {",
+                  "    pm.collectionVariables.set('mcpSessionId', sessionId);",
+                  "    console.log('MCP Session ID saved: ' + sessionId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"initialize\",\n  \"params\": {\n    \"protocolVersion\": \"2024-11-05\",\n    \"clientInfo\": {\n      \"name\": \"postman-client\",\n      \"version\": \"1.0.0\"\n    },\n    \"capabilities\": {}\n  },\n  \"id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "2. List Tools",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/list\",\n  \"params\": {},\n  \"id\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "3. Call Tool - Add",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"add\",\n    \"arguments\": {\n      \"a\": 10,\n      \"b\": 20\n    }\n  },\n  \"id\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "3. Call Tool - Subtract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"subtract\",\n    \"arguments\": {\n      \"a\": 50,\n      \"b\": 15\n    }\n  },\n  \"id\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "3. Call Tool - Multiply",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"multiply\",\n    \"arguments\": {\n      \"a\": 7,\n      \"b\": 8\n    }\n  },\n  \"id\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "3. Call Tool - Divide",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"divide\",\n    \"arguments\": {\n      \"a\": 100,\n      \"b\": 4\n    }\n  },\n  \"id\": 6\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "3. Call Tool - Percent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"percent\",\n    \"arguments\": {\n      \"percent\": 15,\n      \"value\": 200\n    }\n  },\n  \"id\": 7\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "3. Call Tool - Save Result",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "mcp-session-id",
+                "value": "{{mcpSessionId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"save_result\",\n    \"arguments\": {\n      \"operation\": \"add(10, 20)\",\n      \"result\": 30\n    }\n  },\n  \"id\": 8\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ],
+      "description": ""
+    }
+  ]
+}

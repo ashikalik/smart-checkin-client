@@ -1,0 +1,16 @@
+<app-chat-header />
+
+<ion-content class="chat-content">
+  <app-message-list
+    [messages]="chatHook.messages()"
+    [isTyping]="chatHook.isTyping()"
+  />
+</ion-content>
+
+<app-chat-input
+  [(value)]="inputText"
+  [placeholder]="placeholder"
+  [isListening]="voiceHook.isConnected()"
+  (send)="handleSendMessage()"
+  (voiceClick)="handleVoiceClick()"
+/>

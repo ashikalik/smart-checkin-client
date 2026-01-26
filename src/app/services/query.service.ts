@@ -8,7 +8,7 @@ export class QueryService {
 
   constructor(private readonly http: HttpClient) {}
 
-  sendQuery(query: string) {
-    return this.http.post(this.endpoint, { query });
+  sendQuery(query: string, sessionId: string) {
+    return this.http.post(this.endpoint, { query, sessionId });
   }
 }
