@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton } from '@ionic/angular/standalone';
 
@@ -17,11 +17,17 @@ import { IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton } from '@ion
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button defaultHref="/" />
+          <ion-back-button defaultHref="/" (click)="onBackClick()" />
         </ion-buttons>
         <ion-title>AI Check-In Support</ion-title>
       </ion-toolbar>
     </ion-header>
   `
 })
-export class ChatHeaderComponent {}
+export class ChatHeaderComponent {
+  @Output() backClick = new EventEmitter<void>();
+
+  onBackClick() {
+    this.backClick.emit();
+  }
+}

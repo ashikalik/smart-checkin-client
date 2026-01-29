@@ -97,11 +97,20 @@
   letter-spacing: 0.5px;
   margin: 0 0 1.5rem 0;
   animation: fadeInUp 1s ease-out 0.8s both;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .start-button:hover {
   transform: translateY(-2px);
   --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.start-button:active {
+  transform: scale(0.98);
 }
 
 .support-text {

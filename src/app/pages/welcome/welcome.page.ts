@@ -14,9 +14,19 @@ import { addIcons } from 'ionicons';
 export class WelcomePage {
   constructor(private router: Router) {
     addIcons({ airplaneOutline, micOutline, chatbubbleEllipsesOutline });
+    console.log('WelcomePage initialized');
   }
 
   navigateToChat() {
-    this.router.navigate(['/chat']);
+    console.log('navigateToChat() called');
+    console.log('Current router URL:', this.router.url);
+    this.router.navigate(['/chat']).then(success => {
+      console.log('Navigation result:', success);
+      if (!success) {
+        console.error('Navigation failed!');
+      }
+    }).catch(error => {
+      console.error('Navigation error:', error);
+    });
   }
 }

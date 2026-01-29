@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonContent } from '@ionic/angular/standalone';
 import { ChatHeaderComponent } from '../../components/chat-header/chat-header.component';
@@ -9,6 +9,7 @@ import { INPUT_PLACEHOLDER } from '../../constants/messages.constants';
 import { Scribe, RealtimeEvents, RealtimeConnection } from '@elevenlabs/client';
 import { finalize } from 'rxjs';
 import { QueryService } from '../../services/query.service';
+import { TextToSpeechService } from '../../services/text-to-speech.service';
 
 @Component({
   selector: 'app-chat',
@@ -27,8 +28,9 @@ export class ChatPage implements OnInit, OnDestroy {
   inputText: string = '';
   readonly placeholder = INPUT_PLACEHOLDER;
 
-  public chatHook = inject(UseChatHook);
-  private queryService = inject(QueryService);
+  public chatHook: UseChatHook;
+  private queryService: QueryService;
+  private ttsService: TextToSpeechService;
 
   private token!: RealtimeConnection | null;
   private connection!: RealtimeConnection | null;
@@ -38,6 +40,7 @@ export class ChatPage implements OnInit, OnDestroy {
   public queryRepeatCount: number = 0;
   public isListening: boolean = false;
   public isSending: boolean = false;
+  public isSpeaking: boolean = false;
   private sessionId: string = '';
   private isConnecting: boolean = false;
   private tokenGenerationPromise: Promise<void> | null = null;
@@ -76,7 +79,14 @@ export class ChatPage implements OnInit, OnDestroy {
     this.isConnecting = false;
   };
 
-  constructor() {
+  constructor(
+    chatHook: UseChatHook,
+    queryService: QueryService,
+    ttsService: TextToSpeechService
+  ) {
+    this.chatHook = chatHook;
+    this.queryService = queryService;
+    this.ttsService = ttsService;
     this.sessionId = crypto.randomUUID();
   }
 
@@ -86,6 +96,15 @@ export class ChatPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.disconnect();
+    this.ttsService.stop();
+    this.clearChat();
+  }
+
+  clearChat(): void {
+    this.chatHook.clearMessages();
+    this.inputText = '';
+    this.currentQuery = '';
+    this.queryRepeatCount = 0;
   }
 
   handleSendMessage(): void {
@@ -324,10 +343,19 @@ export class ChatPage implements OnInit, OnDestroy {
         }),
       )
       .subscribe({
-        next: (response) => {
+        next: async (response) => {
           const reply = (response as { response?: string })?.response;
           if (reply) {
             this.chatHook.addMessage(reply, 'ai');
+            // Speak the AI response
+            try {
+              this.isSpeaking = true;
+              await this.ttsService.speak(reply);
+            } catch (error) {
+              console.error('Text-to-speech error:', error);
+            } finally {
+              this.isSpeaking = false;
+            }
           }
         },
         error: (error) => {
