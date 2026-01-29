@@ -28,6 +28,10 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
 
+.gold-gradient {
+  background: linear-gradient(135deg, var(--etihad-gold) 0%, var(--etihad-gold-dark) 100%);
+}
+
 .logo-icon {
   font-size: 60px;
   color: white;
@@ -76,6 +80,7 @@
   color: var(--etihad-charcoal);
   font-weight: 500;
   margin: 0;
+  --color: var(--etihad-charcoal);
 }
 
 .start-button {

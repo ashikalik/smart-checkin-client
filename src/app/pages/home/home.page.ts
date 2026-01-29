@@ -30,7 +30,19 @@ export class HomePage {
     if (this.isStarting) return;
     this.isStarting = true;
     try {
+      // Check microphone permissions first
+      const hasPermission = await this.checkMicrophonePermission();
+      if (!hasPermission) {
+        alert('Microphone access is required for voice support. Please enable it in your device settings.');
+        return;
+      }
       await this.startSession();
+    } catch (error) {
+      console.error('Failed to start session:', error);
+      const errorMessage = (error as Error).message || '';
+      if (errorMessage.includes('Permission') || errorMessage.includes('NotAllowed')) {
+        alert('Microphone access denied. Please allow microphone access to use voice support.');
+      }
     } finally {
       this.isStarting = false;
     }
@@ -75,6 +87,44 @@ export class HomePage {
     if (!this.tokenGenerationTime) return 0;
     const elapsed = Math.floor(Date.now() / 1000) - this.tokenGenerationTime;
     return Math.max(0, this.tokenExpirySeconds - elapsed);
+  }
+
+  async checkMicrophonePermission(): Promise<boolean> {
+    try {
+      // For Android/iOS, use Capacitor's permission check first
+      if ((window as any).Capacitor?.isNativePlatform()) {
+        const { Capacitor } = await import('@capacitor/core');
+
+        // Request microphone permission
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach(track => track.stop());
+          console.log('Microphone permission granted');
+          return true;
+        } catch (error: any) {
+          console.error('Microphone permission denied:', error);
+          return false;
+        }
+      }
+
+      // For web, check if navigator.mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('Media devices not supported');
+        return false;
+      }
+
+      // Try to get microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // If successful, stop the stream immediately
+      stream.getTracks().forEach(track => track.stop());
+
+      console.log('Microphone permission granted');
+      return true;
+    } catch (error) {
+      console.error('Microphone permission error:', error);
+      return false;
+    }
   }
 
   public connect(token: string) {

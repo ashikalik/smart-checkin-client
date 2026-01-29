@@ -35,7 +35,12 @@ import { addIcons } from 'ionicons';
           <ion-button
             fill="clear"
             [class]="'mic-button' + (isListening ? ' listening' : '')"
-            (click)="voiceClick.emit()"
+            (mousedown)="voiceStart.emit()"
+            (mouseup)="voiceEnd.emit()"
+            (mouseleave)="voiceEnd.emit()"
+            (touchstart)="voiceStart.emit()"
+            (touchend)="voiceEnd.emit()"
+            (touchcancel)="voiceEnd.emit()"
           >
             <ion-icon slot="icon-only" name="mic-outline" />
           </ion-button>
@@ -59,7 +64,8 @@ export class ChatInputComponent {
   @Input() isListening: boolean = false;
   @Output() valueChange = new EventEmitter<string>();
   @Output() send = new EventEmitter<void>();
-  @Output() voiceClick = new EventEmitter<void>();
+  @Output() voiceStart = new EventEmitter<void>();
+  @Output() voiceEnd = new EventEmitter<void>();
 
   constructor() {
     addIcons({ micOutline, sendOutline });

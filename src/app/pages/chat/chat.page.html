@@ -7,10 +7,22 @@
   />
 </ion-content>
 
+<div class="listening-indicator" *ngIf="isListening">
+  <div class="wave-container">
+    <div class="wave"></div>
+    <div class="wave"></div>
+    <div class="wave"></div>
+    <div class="wave"></div>
+    <div class="wave"></div>
+  </div>
+  <p class="listening-text">Listening...</p>
+</div>
+
 <app-chat-input
   [(value)]="inputText"
   [placeholder]="placeholder"
-  [isListening]="voiceHook.isConnected()"
+  [isListening]="isListening"
   (send)="handleSendMessage()"
-  (voiceClick)="handleVoiceClick()"
+  (voiceStart)="handleVoiceStart()"
+  (voiceEnd)="handleVoiceEnd()"
 />
