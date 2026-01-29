@@ -11,6 +11,8 @@ import { QueryService } from '../../services/query.service';
   styleUrls: ['home.page.scss'],
   imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonList, IonItem, IonLabel, IonProgressBar, IonSpinner],
 })
+
+/** @deprecated */
 export class HomePage {
   private token!: RealtimeConnection | null;
   private connection!: RealtimeConnection | null;

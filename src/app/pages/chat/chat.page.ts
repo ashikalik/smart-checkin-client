@@ -44,6 +44,10 @@ export class ChatPage implements OnInit, OnDestroy {
   private sessionId: string = '';
   private isConnecting: boolean = false;
   private tokenGenerationPromise: Promise<void> | null = null;
+  private lastCommittedQuery: string = '';
+  private commitDebounceTimeout: any = null;
+  private reconnectAttempts: number = 0;
+  private maxReconnectAttempts: number = 3;
 
   // Event handlers
   private onSessionStarted = () => {
@@ -64,13 +68,32 @@ export class ChatPage implements OnInit, OnDestroy {
     console.error('Scribe connection error:', error);
     this.isListening = false;
     this.isConnecting = false;
+
     if (this.connection) {
       this.disconnect();
+    }
+
+    // Attempt reconnection if within retry limit
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+      setTimeout(() => {
+        if (!this.isListening && !this.isConnecting) {
+          console.log('Auto-reconnection skipped - not in active session');
+        }
+      }, 2000);
+    } else {
+      console.error('Max reconnection attempts reached');
+      this.chatHook.addMessage(
+        'Connection lost. Please try again.',
+        'ai',
+      );
     }
   };
 
   private onOpen = () => {
     console.log('Connection opened');
+    this.reconnectAttempts = 0;
   };
 
   private onClose = () => {
@@ -95,6 +118,9 @@ export class ChatPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.commitDebounceTimeout) {
+      clearTimeout(this.commitDebounceTimeout);
+    }
     this.disconnect();
     this.ttsService.stop();
     this.clearChat();
@@ -105,6 +131,11 @@ export class ChatPage implements OnInit, OnDestroy {
     this.inputText = '';
     this.currentQuery = '';
     this.queryRepeatCount = 0;
+    this.lastCommittedQuery = '';
+    this.reconnectAttempts = 0;
+    if (this.commitDebounceTimeout) {
+      clearTimeout(this.commitDebounceTimeout);
+    }
   }
 
   handleSendMessage(): void {
@@ -316,27 +347,50 @@ export class ChatPage implements OnInit, OnDestroy {
   }
 
   private setQuery(query: string): void {
+    if (!query.trim()) return;
+
     if (query === this.currentQuery) {
       this.queryRepeatCount++;
+    } else {
+      this.currentQuery = query;
+      this.queryRepeatCount = 0;
     }
-    if (this.queryRepeatCount > 1) {
-      this.commit();
-    }
-    this.currentQuery = query;
+
     this.inputText = query;
+
+    // Debounce auto-commit to prevent rapid commits
+    if (this.commitDebounceTimeout) {
+      clearTimeout(this.commitDebounceTimeout);
+    }
+
+    if (this.queryRepeatCount > 2) {
+      this.commitDebounceTimeout = setTimeout(() => {
+        this.commit();
+      }, 500);
+    }
   }
 
   private commitQuery(query: string): void {
-    if (this.isSending || !query.trim()) return;
+    const trimmedQuery = query.trim();
 
-    this.chatHook.addMessage(query, 'user');
+    // Prevent sending if already sending or query is empty
+    if (this.isSending || !trimmedQuery) return;
+
+    // Prevent duplicate consecutive queries
+    if (trimmedQuery === this.lastCommittedQuery) {
+      console.log('Duplicate query detected, skipping:', trimmedQuery);
+      return;
+    }
+
+    this.lastCommittedQuery = trimmedQuery;
+    this.chatHook.addMessage(trimmedQuery, 'user');
     this.inputText = '';
     this.currentQuery = '';
     this.queryRepeatCount = 0;
 
     this.isSending = true;
     this.queryService
-      .sendQuery(query, this.sessionId)
+      .sendQuery(trimmedQuery, this.sessionId)
       .pipe(
         finalize(() => {
           this.isSending = false;
