@@ -2,9 +2,15 @@
   --background: var(--etihad-background);
 }
 
+@media (prefers-color-scheme: dark) {
+  .chat-content {
+    --background: #121212;
+  }
+}
+
 .listening-indicator {
   position: fixed;
-  bottom: 80px;
+  bottom: calc(80px + env(safe-area-inset-bottom));
   left: 0;
   right: 0;
   background: linear-gradient(135deg, var(--etihad-gold) 0%, var(--etihad-gold-dark) 100%);
