@@ -91,4 +91,4 @@ jobs:
         with:
           name: app-debug-v${{ needs.increment-version.outputs.version }}
           path: android/app/build/outputs/apk/debug/${{ env.APK_NAME }}
-          retention-days: 10
+          retention-days: 2

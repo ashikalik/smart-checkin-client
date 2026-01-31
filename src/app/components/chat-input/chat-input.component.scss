@@ -9,22 +9,6 @@
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
-@media (prefers-color-scheme: dark) {
-  .chat-footer {
-    --background: #1a1a1a;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
-  }
-
-  .input-wrapper {
-    background: #2a2a2a !important;
-  }
-
-  .message-input {
-    --color: #ffffff;
-    --placeholder-color: #888888;
-  }
-}
-
 .input-wrapper {
   display: flex;
   align-items: center;

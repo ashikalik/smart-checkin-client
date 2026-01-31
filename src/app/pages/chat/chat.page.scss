@@ -2,12 +2,6 @@
   --background: var(--etihad-background);
 }
 
-@media (prefers-color-scheme: dark) {
-  .chat-content {
-    --background: #121212;
-  }
-}
-
 .listening-indicator {
   position: fixed;
   bottom: calc(80px + env(safe-area-inset-bottom));
