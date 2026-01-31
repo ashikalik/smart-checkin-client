@@ -27,18 +27,20 @@ import { addIcons } from 'ionicons';
         <div class="input-wrapper">
           <ion-input
             class="message-input"
-            [placeholder]="placeholder"
+            [placeholder]="isProcessing ? 'AI is responding...' : placeholder"
             [(ngModel)]="value"
+            [disabled]="isProcessing"
             (keypress)="onKeyPress($event)"
           />
 
           <ion-button
             fill="clear"
             [class]="'mic-button' + (isListening ? ' listening' : '')"
-            (mousedown)="voiceStart.emit()"
+            [disabled]="isProcessing"
+            (mousedown)="!isProcessing && voiceStart.emit()"
             (mouseup)="voiceEnd.emit()"
             (mouseleave)="voiceEnd.emit()"
-            (touchstart)="voiceStart.emit()"
+            (touchstart)="!isProcessing && voiceStart.emit()"
             (touchend)="voiceEnd.emit()"
             (touchcancel)="voiceEnd.emit()"
           >
@@ -47,7 +49,7 @@ import { addIcons } from 'ionicons';
 
           <ion-button
             class="send-button"
-            [disabled]="!value.trim()"
+            [disabled]="!value.trim() || isProcessing"
             (click)="send.emit()"
           >
             <ion-icon slot="icon-only" name="send-outline" />
@@ -62,6 +64,7 @@ export class ChatInputComponent {
   @Input() value: string = '';
   @Input() placeholder: string = '';
   @Input() isListening: boolean = false;
+  @Input() isProcessing: boolean = false;
   @Output() valueChange = new EventEmitter<string>();
   @Output() send = new EventEmitter<void>();
   @Output() voiceStart = new EventEmitter<void>();

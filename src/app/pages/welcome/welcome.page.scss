@@ -55,6 +55,16 @@
   animation: fadeIn 1s ease-out 0.4s both;
 }
 
+.highlight-gold {
+  color: var(--etihad-gold);
+  font-weight: 600;
+}
+
+.highlight-dark {
+  color: var(--etihad-charcoal);
+  font-weight: 500;
+}
+
 .features-container {
   display: flex;
   justify-content: center;
