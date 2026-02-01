@@ -63,6 +63,7 @@ export class HomePage {
     this.conversation = [];
   }
 
+  
   async startSession() {
     if (!this.sessionId) {
       this.sessionId = crypto.randomUUID();
