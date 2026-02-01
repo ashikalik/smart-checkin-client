@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonLabel, IonButton, IonProgressBar, IonSpinner } from '@ionic/angular/standalone';
 import { Scribe, RealtimeEvents, RealtimeConnection } from "@elevenlabs/client";
 import { finalize } from 'rxjs';
-import { QueryService } from '../services/query.service';
+import { QueryService } from '../../services/query.service';
 
 @Component({
   selector: 'app-home',
@@ -11,6 +11,8 @@ import { QueryService } from '../services/query.service';
   styleUrls: ['home.page.scss'],
   imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonList, IonItem, IonLabel, IonProgressBar, IonSpinner],
 })
+
+/** @deprecated */
 export class HomePage {
   private token!: RealtimeConnection | null;
   private connection!: RealtimeConnection | null;
@@ -30,7 +32,19 @@ export class HomePage {
     if (this.isStarting) return;
     this.isStarting = true;
     try {
+      // Check microphone permissions first
+      const hasPermission = await this.checkMicrophonePermission();
+      if (!hasPermission) {
+        alert('Microphone access is required for voice support. Please enable it in your device settings.');
+        return;
+      }
       await this.startSession();
+    } catch (error) {
+      console.error('Failed to start session:', error);
+      const errorMessage = (error as Error).message || '';
+      if (errorMessage.includes('Permission') || errorMessage.includes('NotAllowed')) {
+        alert('Microphone access denied. Please allow microphone access to use voice support.');
+      }
     } finally {
       this.isStarting = false;
     }
@@ -49,6 +63,7 @@ export class HomePage {
     this.conversation = [];
   }
 
+  
   async startSession() {
     if (!this.sessionId) {
       this.sessionId = crypto.randomUUID();
@@ -77,6 +92,44 @@ export class HomePage {
     return Math.max(0, this.tokenExpirySeconds - elapsed);
   }
 
+  async checkMicrophonePermission(): Promise<boolean> {
+    try {
+      // For Android/iOS, use Capacitor's permission check first
+      if ((window as any).Capacitor?.isNativePlatform()) {
+        const { Capacitor } = await import('@capacitor/core');
+
+        // Request microphone permission
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach(track => track.stop());
+          console.log('Microphone permission granted');
+          return true;
+        } catch (error: any) {
+          console.error('Microphone permission denied:', error);
+          return false;
+        }
+      }
+
+      // For web, check if navigator.mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error('Media devices not supported');
+        return false;
+      }
+
+      // Try to get microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // If successful, stop the stream immediately
+      stream.getTracks().forEach(track => track.stop());
+
+      console.log('Microphone permission granted');
+      return true;
+    } catch (error) {
+      console.error('Microphone permission error:', error);
+      return false;
+    }
+  }
+
   public connect(token: string) {
     this.disconnect();
     this.connection = Scribe.connect({
@@ -97,7 +150,7 @@ export class HomePage {
       this.connection.commit();
       this.connection.close();
       this.unsubscribeEvents();
-     
+
     }
     this.connection = null;
   }
@@ -116,7 +169,7 @@ export class HomePage {
 
   commitQuery(query: string) {
     if (this.isSending) return;
-   
+
     this.conversation.push(query);
     this.currentQuery = '';
     this.queryRepeatCount = 0;

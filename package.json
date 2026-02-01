@@ -5,11 +5,15 @@
   "homepage": "https://ionicframework.com/",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "ios:dev": "ionic capacitor run ios --livereload --external --open",
+    "ios:build": "ionic capacitor build ios",
+    "android:dev": "ionic capacitor run android --livereload --external --open",
+    "android:build": "ionic capacitor build android"
   },
   "private": true,
   "dependencies": {

@@ -1,0 +1,273 @@
+.agent-content {
+  --padding-top: 20px;
+  --padding-bottom: 20px;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --background: var(--etihad-background);
+  background: var(--etihad-background);
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.conversation-id {
+  font-size: 12px;
+  color: #8b8b8b;
+}
+
+.message-list {
+  background: transparent;
+  --background: transparent;
+  margin-bottom: 140px;
+}
+
+.message-item {
+  --background: #ffffff;
+  --border-color: #e2dfd6;
+  --border-width: 1px;
+  --inner-border-width: 0;
+  --inner-border-color: transparent;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+  position: relative;
+  min-width: 0;
+  width: 85%;
+}
+
+.message-item ion-label {
+  white-space: normal;
+}
+
+.message-item ion-label.user {
+  text-align: right;
+}
+
+.message-item.user-bubble {
+  margin-left: auto;
+}
+
+.message-item:not(.user-bubble) {
+  margin-right: auto;
+}
+
+.message-item::part(native) {
+  border-radius: 16px;
+  position: relative;
+}
+
+.message-item::part(native)::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: -6px;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border-bottom-right-radius: 12px;
+  transform: rotate(45deg);
+}
+
+.message-item.user-bubble::part(native) {
+  background: #f3efe5;
+}
+
+.message-item.user-bubble::part(native)::after {
+  left: auto;
+  right: -6px;
+  background: #f3efe5;
+  transform: rotate(45deg);
+}
+
+.message-text {
+  font-size: 15px;
+  color: var(--etihad-charcoal);
+}
+
+
+ion-footer {
+  background: #ffffff;
+  padding: 6px 10px;
+  box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.input-row ion-input {
+  flex: 1;
+  --background: #f6f4ef;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--etihad-gold);
+  overflow: hidden;
+}
+
+.send-button {
+  --background: transparent;
+  --background-hover: transparent;
+  --background-activated: transparent;
+  --color: white;
+  --border-radius: 50%;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+}
+
+.send-button::part(native) {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.send-button ion-icon {
+  font-size: 20px;
+}
+
+ion-header ion-toolbar {
+  --background: #ffffff;
+  --color: var(--etihad-charcoal);
+}
+
+ion-title {
+  font-weight: 700;
+}
+
+ion-toolbar ion-button {
+  --color: var(--etihad-gold);
+  --background: transparent;
+  --background-hover: transparent;
+  --background-activated: transparent;
+  --box-shadow: none;
+}
+
+ion-toolbar ion-icon {
+  font-size: 26px;
+}
+
+.connection-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 8px;
+  background: #dc2626;
+}
+
+.connection-dot.connected {
+  background: #16a34a;
+}
+
+.connection-dot.disconnected {
+  background: #dc2626;
+}
+
+ion-badge {
+  --background: var(--etihad-gold);
+  --color: white;
+}
+
+ion-badge[color='tertiary'] {
+  --background: #2f2f2f;
+}
+
+ion-button {
+  --background: var(--etihad-gold);
+  --background-hover: var(--etihad-gold-dark);
+  --background-activated: var(--etihad-gold-dark);
+  --color: white;
+  --border-radius: 20px;
+  --box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+ion-button[color='danger'] {
+  --background: #2f2f2f;
+  --background-hover: #1f1f1f;
+  --background-activated: #1f1f1f;
+}
+
+.footer-send {
+  --background: transparent;
+  --background-hover: transparent;
+  --background-activated: transparent;
+  --box-shadow: none;
+  --color: var(--etihad-gold);
+  --padding-start: 4px;
+  --padding-end: 4px;
+  --padding-top: 4px;
+  --padding-bottom: 4px;
+}
+
+.footer-send ion-icon {
+  color: var(--etihad-gold);
+}
+
+.mode-badge {
+  --background: #2f2f2f;
+  --color: #ffffff;
+  margin-left: 6px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+
+.mode-badge ion-icon {
+  font-size: 14px;
+}
+
+.mode-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.mode-dots .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffffff;
+  opacity: 0.4;
+  animation: modeDotPulse 1s infinite ease-in-out;
+}
+
+.mode-dots .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.mode-dots .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes modeDotPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}

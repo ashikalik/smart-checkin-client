@@ -1,0 +1,56 @@
+<ion-content fullscreen class="welcome-content">
+    <ion-grid class="welcome-container">
+      <ion-row class="ion-justify-content-center ion-align-items-center full-height">
+        <ion-col size="12" sizeMd="8" sizeLg="6">
+
+          <div class="logo-container">
+            <div class="logo-circle gold-gradient">
+              <ion-icon name="airplane-outline" class="logo-icon"></ion-icon>
+            </div>
+          </div>
+
+          <ion-text>
+            <h1 class="welcome-title">Smart Check In</h1>
+          </ion-text>
+
+          <ion-text color="medium">
+            <p class="welcome-subtitle">
+              <span class="highlight-gold">Etihad Excellence Begins Now</span><br>
+              <span class="highlight-light">Graceful Check In, Guest Inspired Extras</span>
+            </p>
+          </ion-text>
+
+          <div class="features-container">
+            <div class="feature-item">
+              <ion-icon name="chatbubble-ellipses-outline" class="feature-icon"></ion-icon>
+              <ion-text>
+                <p class="feature-text">Text Support</p>
+              </ion-text>
+            </div>
+            <div class="feature-item">
+              <ion-icon name="mic-outline" class="feature-icon"></ion-icon>
+              <ion-text>
+                <p class="feature-text">Voice Support</p>
+              </ion-text>
+            </div>
+          </div>
+
+          <ion-button
+            expand="block"
+            size="large"
+            class="start-button"
+            type="button"
+            (click)="navigateToAgent()">
+            Start
+          </ion-button>
+
+          <ion-text color="medium">
+            <p class="support-text">
+               24/7 Voice or text support
+            </p>
+          </ion-text>
+
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </ion-content>
