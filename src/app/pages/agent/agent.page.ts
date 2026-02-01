@@ -62,7 +62,6 @@ export class AgentPage implements OnInit, OnDestroy {
   isConnecting = false;
   isSending = false;
   private lastHandledUserMessage = '';
-  private pendingReplyIndex: number | null = null;
   private pendingSpeakText: string | null = null;
 
   messages: ConversationMessage[] = [];
@@ -233,46 +232,25 @@ export class AgentPage implements OnInit, OnDestroy {
   private async handleApiTurn(goal: string): Promise<void> {
     this.isSending = true;
     try {
-      this.setPendingReply('Waiting for the check-in service...');
       const reply = await this.callCheckinApi(goal);
       console.log("reply");
       console.log(reply);
       const userMessage = reply.userMessage;
       if (userMessage) {
-        this.resolvePendingReply(userMessage);
+        this.addMessage({ role: 'agent', text: userMessage });
         if (this.conversation?.isOpen()) {
           this.pendingSpeakText = userMessage;
           this.trySendSpeakPrompt();
         }
       } else {
-        this.resolvePendingReply('No response received from the check-in service.');
+        this.addSystemMessage('Please wait while I fetch your information');
       }
     } catch (error) {
       console.error('Check-in API error:', error);
-      this.resolvePendingReply('Failed to reach the check-in service.');
+      this.addSystemMessage('Failed to reach the check-in service.');
     } finally {
       this.isSending = false;
     }
-  }
-
-  private setPendingReply(text: string): void {
-    const nextMessages = [...this.messages, { role: 'agent', text } as ConversationMessage];
-    this.pendingReplyIndex = nextMessages.length - 1;
-    this.messages = nextMessages;
-    this.scrollToBottom();
-  }
-
-  private resolvePendingReply(text: string): void {
-    if (this.pendingReplyIndex === null) {
-      this.addMessage({ role: 'agent', text });
-      return;
-    }
-
-    const nextMessages = [...this.messages];
-    nextMessages[this.pendingReplyIndex] = { role: 'agent', text } as ConversationMessage;
-    this.messages = nextMessages;
-    this.pendingReplyIndex = null;
-    this.scrollToBottom();
   }
 
   private scrollToBottom(): void {
@@ -293,6 +271,7 @@ export class AgentPage implements OnInit, OnDestroy {
     this.pendingSpeakText = null;
     this.conversation.sendUserMessage(`Say exactly the following sentence and nothing else: "${text}"`);
   }
+
 
 
   private async callCheckinApi(goal: string): Promise<{ userMessage: string; raw: unknown }> {
