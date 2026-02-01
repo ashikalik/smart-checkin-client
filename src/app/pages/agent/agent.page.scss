@@ -26,17 +26,12 @@
 }
 
 .message-item {
-  --background: #ffffff;
-  --border-color: #e2dfd6;
-  --border-width: 1px;
+  --background: transparent;
+  --border-color: transparent;
+  --border-width: 0;
   --inner-border-width: 0;
   --inner-border-color: transparent;
-  border-radius: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
-  position: relative;
-  min-width: 0;
-  width: 85%;
 }
 
 .message-item ion-label {
@@ -56,32 +51,50 @@
 }
 
 .message-item::part(native) {
-  border-radius: 16px;
-  position: relative;
-}
-
-.message-item::part(native)::after {
-  content: '';
-  position: absolute;
-  bottom: 8px;
-  left: -6px;
-  width: 12px;
-  height: 12px;
-  background: #ffffff;
-  border-bottom-right-radius: 12px;
-  transform: rotate(45deg);
+  padding: 0;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .message-item.user-bubble::part(native) {
-  background: #f3efe5;
+  justify-content: flex-end;
 }
 
-.message-item.user-bubble::part(native)::after {
-  left: auto;
-  right: -6px;
-  background: #f3efe5;
-  transform: rotate(45deg);
+.message-item ion-label {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 0;
 }
+
+.message-item.user-bubble ion-label {
+  justify-content: flex-end;
+}
+
+.bubble {
+  background: #ffffff;
+  border: 1px solid #e2dfd6;
+  border-radius: 16px;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+  padding: 10px 12px;
+  max-width: 85%;
+  width: fit-content;
+  position: relative;
+}
+
+
+.bubble.user {
+  background: #f3efe5;
+  border-color: #e2dfd6;
+  margin-left: auto;
+  text-align: right;
+}
+
+.message-item.user-bubble .bubble {
+  margin-right: 0;
+}
+
 
 .message-text {
   font-size: 15px;
