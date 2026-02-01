@@ -50,6 +50,7 @@ interface ConversationMessage {
 export class AgentPage implements OnInit, OnDestroy {
   @ViewChild(IonContent) private content?: IonContent;
 
+  private readonly sessionStorageKey = 'smart-checkin-session-id';
   readonly agentId = 'agent_4101kga7dg1cecjadpd4h4mtg1e5';
   readonly apiUrl = '/api/main/run';
 
@@ -67,10 +68,11 @@ export class AgentPage implements OnInit, OnDestroy {
   messages: ConversationMessage[] = [];
   inputText = '';
 
-  constructor() {}
+  constructor() { }
 
   ngOnInit(): void {
     addIcons({ playCircle, stopCircle, volumeHigh });
+    this.sessionId = sessionStorage.getItem(this.sessionStorageKey) ?? '';
   }
 
   ngOnDestroy(): void {
@@ -96,6 +98,9 @@ export class AgentPage implements OnInit, OnDestroy {
       return;
     }
 
+    this.messages = [];
+    this.sessionId = '';
+    sessionStorage.removeItem(this.sessionStorageKey);
     this.isConnecting = true;
 
     try {
@@ -143,7 +148,7 @@ export class AgentPage implements OnInit, OnDestroy {
 
       this.conversation.sendContextualUpdate(
         'System override: Do NOT speak or respond unless explicitly instructed with "Speak exactly: ...". ' +
-          'If no such instruction is present, remain silent.'
+        'If no such instruction is present, remain silent.'
       );
     } catch (error) {
       console.error('Failed to start agent session:', error);
@@ -168,7 +173,6 @@ export class AgentPage implements OnInit, OnDestroy {
       this.mode = null;
       this.canSendFeedback = false;
       this.conversationId = '';
-      this.sessionId = '';
     }
   }
 
@@ -221,12 +225,16 @@ export class AgentPage implements OnInit, OnDestroy {
   }
 
   private addMessage(message: ConversationMessage): void {
+    const recent = this.messages.slice(-5);
+    if (recent.some((item) => item.role === message.role && item.text === message.text)) {
+      return;
+    }
     this.messages = [...this.messages, message];
     this.scrollToBottom();
   }
 
   private addSystemMessage(text: string): void {
-    this.messages = [...this.messages, { role: 'agent', text }];
+    this.addMessage({ role: 'agent', text });
   }
 
   private async handleApiTurn(goal: string): Promise<void> {
@@ -237,13 +245,19 @@ export class AgentPage implements OnInit, OnDestroy {
       console.log(reply);
       const userMessage = reply.userMessage;
       if (userMessage) {
-        this.addMessage({ role: 'agent', text: userMessage });
         if (this.conversation?.isOpen()) {
           this.pendingSpeakText = userMessage;
           this.trySendSpeakPrompt();
+        } else {
+          this.addMessage({ role: 'agent', text: userMessage });
         }
       } else {
-        this.addSystemMessage('Please wait while I fetch your information');
+         if (this.conversation?.isOpen()) {
+          this.pendingSpeakText = 'Please wait while I fetch your information';
+          this.trySendSpeakPrompt();
+        } else {
+          this.addSystemMessage('Please wait while I fetch your information');
+        }
       }
     } catch (error) {
       console.error('Check-in API error:', error);
@@ -266,10 +280,14 @@ export class AgentPage implements OnInit, OnDestroy {
     if (this.mode === 'speaking') {
       return;
     }
-
-    const text = this.pendingSpeakText;
-    this.pendingSpeakText = null;
-    this.conversation.sendUserMessage(`Say exactly the following sentence and nothing else: "${text}"`);
+    if (this.pendingSpeakText) {
+      const text = this.pendingSpeakText;
+      this.pendingSpeakText = null;
+      this.conversation?.sendUserMessage(`Say exactly the following sentence and nothing else: "${text}"`);
+      setTimeout(() => {
+        this.addMessage({ role: 'agent', text });
+      }, 300);
+    }
   }
 
 
@@ -300,6 +318,7 @@ export class AgentPage implements OnInit, OnDestroy {
 
     if (data.sessionId) {
       this.sessionId = data.sessionId;
+      sessionStorage.setItem(this.sessionStorageKey, data.sessionId);
     }
 
     const userMessage = data.userMessage ?? data.reply ?? data.message ?? data.response ?? '';
