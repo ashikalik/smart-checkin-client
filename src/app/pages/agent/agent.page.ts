@@ -234,7 +234,7 @@ export class AgentPage implements OnInit, OnDestroy {
   }
 
   private addSystemMessage(text: string): void {
-    this.messages = [...this.messages, { role: 'agent', text }];
+    this.addMessage({ role: 'agent', text });
   }
 
   private async handleApiTurn(goal: string): Promise<void> {
