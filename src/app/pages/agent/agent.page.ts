@@ -67,7 +67,7 @@ export class AgentPage implements OnInit, OnDestroy {
   messages: ConversationMessage[] = [];
   inputText = '';
 
-  constructor() {}
+  constructor() { }
 
   ngOnInit(): void {
     addIcons({ playCircle, stopCircle, volumeHigh });
@@ -143,7 +143,7 @@ export class AgentPage implements OnInit, OnDestroy {
 
       this.conversation.sendContextualUpdate(
         'System override: Do NOT speak or respond unless explicitly instructed with "Speak exactly: ...". ' +
-          'If no such instruction is present, remain silent.'
+        'If no such instruction is present, remain silent.'
       );
     } catch (error) {
       console.error('Failed to start agent session:', error);
@@ -221,6 +221,10 @@ export class AgentPage implements OnInit, OnDestroy {
   }
 
   private addMessage(message: ConversationMessage): void {
+    const last = this.messages[this.messages.length - 1];
+    if (last && last.role === message.role && last.text === message.text) {
+      return;
+    }
     this.messages = [...this.messages, message];
     this.scrollToBottom();
   }
@@ -237,13 +241,19 @@ export class AgentPage implements OnInit, OnDestroy {
       console.log(reply);
       const userMessage = reply.userMessage;
       if (userMessage) {
-        this.addMessage({ role: 'agent', text: userMessage });
         if (this.conversation?.isOpen()) {
           this.pendingSpeakText = userMessage;
           this.trySendSpeakPrompt();
+        } else {
+          this.addMessage({ role: 'agent', text: userMessage });
         }
       } else {
-        this.addSystemMessage('Please wait while I fetch your information');
+         if (this.conversation?.isOpen()) {
+          this.pendingSpeakText = 'Please wait while I fetch your information';
+          this.trySendSpeakPrompt();
+        } else {
+          this.addSystemMessage('Please wait while I fetch your information');
+        }
       }
     } catch (error) {
       console.error('Check-in API error:', error);
@@ -266,10 +276,14 @@ export class AgentPage implements OnInit, OnDestroy {
     if (this.mode === 'speaking') {
       return;
     }
-
-    const text = this.pendingSpeakText;
-    this.pendingSpeakText = null;
-    this.conversation.sendUserMessage(`Say exactly the following sentence and nothing else: "${text}"`);
+    if (this.pendingSpeakText) {
+      const text = this.pendingSpeakText;
+      this.pendingSpeakText = null;
+      this.conversation?.sendUserMessage(`Say exactly the following sentence and nothing else: "${text}"`);
+      setTimeout(() => {
+        this.addMessage({ role: 'agent', text });
+      }, 300);
+    }
   }
 
 
