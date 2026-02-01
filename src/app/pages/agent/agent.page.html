@@ -30,8 +30,10 @@
 
   <ion-list class="message-list">
     <ion-item *ngFor="let message of messages" class="message-item" [class.user-bubble]="message.role === 'user'">
-      <ion-label [class.user]="message.role === 'user'">
-        <p class="message-text">{{ message.text }}</p>
+      <ion-label>
+        <div class="bubble" [class.user]="message.role === 'user'">
+          <p class="message-text">{{ message.text }}</p>
+        </div>
       </ion-label>
     </ion-item>
   </ion-list>
