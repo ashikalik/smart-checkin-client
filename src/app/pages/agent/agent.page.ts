@@ -50,6 +50,7 @@ interface ConversationMessage {
 export class AgentPage implements OnInit, OnDestroy {
   @ViewChild(IonContent) private content?: IonContent;
 
+  private readonly sessionStorageKey = 'smart-checkin-session-id';
   readonly agentId = 'agent_4101kga7dg1cecjadpd4h4mtg1e5';
   readonly apiUrl = '/api/main/run';
 
@@ -71,6 +72,7 @@ export class AgentPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     addIcons({ playCircle, stopCircle, volumeHigh });
+    this.sessionId = sessionStorage.getItem(this.sessionStorageKey) ?? '';
   }
 
   ngOnDestroy(): void {
@@ -96,6 +98,9 @@ export class AgentPage implements OnInit, OnDestroy {
       return;
     }
 
+    this.messages = [];
+    this.sessionId = '';
+    sessionStorage.removeItem(this.sessionStorageKey);
     this.isConnecting = true;
 
     try {
@@ -168,7 +173,6 @@ export class AgentPage implements OnInit, OnDestroy {
       this.mode = null;
       this.canSendFeedback = false;
       this.conversationId = '';
-      this.sessionId = '';
     }
   }
 
@@ -221,8 +225,8 @@ export class AgentPage implements OnInit, OnDestroy {
   }
 
   private addMessage(message: ConversationMessage): void {
-    const last = this.messages[this.messages.length - 1];
-    if (last && last.role === message.role && last.text === message.text) {
+    const recent = this.messages.slice(-5);
+    if (recent.some((item) => item.role === message.role && item.text === message.text)) {
       return;
     }
     this.messages = [...this.messages, message];
@@ -314,6 +318,7 @@ export class AgentPage implements OnInit, OnDestroy {
 
     if (data.sessionId) {
       this.sessionId = data.sessionId;
+      sessionStorage.setItem(this.sessionStorageKey, data.sessionId);
     }
 
     const userMessage = data.userMessage ?? data.reply ?? data.message ?? data.response ?? '';
