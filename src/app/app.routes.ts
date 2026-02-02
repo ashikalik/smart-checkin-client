@@ -18,6 +18,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/agent/agent.page').then((m) => m.AgentPage),
   },
   {
+    path: 'voice-agent',
+    loadComponent: () => import('./pages/voice-agent/voice-agent.page').then((m) => m.VoiceAgentPage),
+  },
+  {
     path: '',
     redirectTo: 'welcome',
     pathMatch: 'full',

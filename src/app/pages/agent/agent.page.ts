@@ -51,7 +51,7 @@ export class AgentPage implements OnInit, OnDestroy {
   @ViewChild(IonContent) private content?: IonContent;
 
   private readonly sessionStorageKey = 'smart-checkin-session-id';
-  readonly agentId = '<eleven_labs_agent_id>';
+  readonly agentId = 'agent_4101kga7dg1cecjadpd4h4mtg1e5';
   readonly apiUrl = '/api/main/run';
 
   conversation: Conversation | null = null;

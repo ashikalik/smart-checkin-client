@@ -32,7 +32,7 @@ export class WelcomePage {
   navigateToAgent() {
     console.log('navigateToChat() called');
     console.log('Current router URL:', this.router.url);
-    this.router.navigate(['/agent']).then(success => {
+    this.router.navigate(['/voice-agent']).then(success => {
       console.log('Navigation result:', success);
       if (!success) {
         console.error('Navigation failed!');
