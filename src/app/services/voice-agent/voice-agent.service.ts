@@ -13,6 +13,7 @@ export class VoiceAgentService {
   private lastMode: Mode | null = null;
   private lastFinalizedUserText = '';
   private lastFinalizedAgentText = '';
+  private pendingAgentFinalText: string | null = null;
 
   readonly isConnecting = signal(false);
   readonly isSending = signal(false);
@@ -49,6 +50,7 @@ export class VoiceAgentService {
     this.lastMode = null;
     this.lastFinalizedUserText = '';
     this.lastFinalizedAgentText = '';
+    this.pendingAgentFinalText = null;
 
     try {
       await this.agentSession.startSession({
@@ -129,7 +131,8 @@ export class VoiceAgentService {
     }
 
     if (payload.role === 'agent' && this.agentSession.mode() === 'speaking') {
-      this.chat.setLive('agent', message);
+      this.pendingAgentFinalText = message;
+      this.chat.setLive('agent', '');
       return;
     }
 
@@ -159,7 +162,11 @@ export class VoiceAgentService {
       const reply = await this.checkinApi.callCheckinApi(goal);
       const journeyCard = this.journeyCardFormatter.buildFromResponse(reply.raw);
       this.journeyCard.set(journeyCard);
-      const userMessage = reply.userMessage;
+      let userMessage = reply.userMessage;
+      if (!userMessage && journeyCard) {
+        userMessage = `Check-in is open for ${journeyCard.origin} to ${journeyCard.destination}. ` +
+          `Departure ${journeyCard.departureDate} at ${journeyCard.departureTime}.`;
+      }
       if (userMessage) {
         if (this.agentSession.isOpen()) {
           this.pendingSpeakText = userMessage;
@@ -202,6 +209,7 @@ export class VoiceAgentService {
     }
     if (this.lastMode === 'speaking' && mode !== 'speaking') {
       this.finalizeLive('agent');
+      this.flushPendingAgentText();
     }
 
     if (mode === 'listening' && this.liveUserText() === null) {
@@ -229,5 +237,16 @@ export class VoiceAgentService {
     }
 
     this.chat.addMessage({ role, text });
+  }
+
+  private flushPendingAgentText(): void {
+    if (!this.pendingAgentFinalText) {
+      return;
+    }
+
+    const text = this.pendingAgentFinalText;
+    this.pendingAgentFinalText = null;
+    this.lastFinalizedAgentText = text;
+    this.chat.addMessage({ role: 'agent', text });
   }
 }
