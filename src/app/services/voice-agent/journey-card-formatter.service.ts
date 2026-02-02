@@ -68,53 +68,62 @@ export class JourneyCardFormatterService {
   }
 
   private normalizeResponse(response: unknown): unknown {
-    if (typeof response === 'string') {
-      try {
-        return JSON.parse(response);
-      } catch {
-        return response;
-      }
+    const parsed = this.tryParse(response);
+    if (!parsed || typeof parsed !== 'object') {
+      return parsed;
     }
 
-    if (!response || typeof response !== 'object') {
-      return response;
+    const candidate = this.findCandidate(parsed as Record<string, unknown>);
+    return candidate ?? parsed;
+  }
+
+  private tryParse(value: unknown): unknown {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
+
+  private findCandidate(value: Record<string, unknown>): Record<string, unknown> | null {
+    if (value['stage'] || value['status'] || value['data']) {
+      return value;
     }
 
-    const payload = response as { stage?: string; status?: string; data?: unknown };
-    if (payload.stage || payload.status) {
-      return payload;
-    }
-
-    if ((response as { response?: unknown }).response) {
-      const nestedResponse = (response as { response?: unknown }).response;
-      if (typeof nestedResponse === 'string') {
-        try {
-          return JSON.parse(nestedResponse);
-        } catch {
-          return nestedResponse;
+    if (value['response']) {
+      const parsed = this.tryParse(value['response']);
+      if (parsed && typeof parsed === 'object') {
+        const found = this.findCandidate(parsed as Record<string, unknown>);
+        if (found) {
+          return found;
         }
       }
-      if (nestedResponse && typeof nestedResponse === 'object') {
-        return nestedResponse;
+    }
+
+    if (value['data']) {
+      const parsed = this.tryParse(value['data']);
+      if (parsed && typeof parsed === 'object') {
+        const found = this.findCandidate(parsed as Record<string, unknown>);
+        if (found) {
+          return found;
+        }
       }
     }
 
-    if (typeof payload.data === 'string') {
-      try {
-        return JSON.parse(payload.data);
-      } catch {
-        return payload;
+    if (value['result']) {
+      const parsed = this.tryParse(value['result']);
+      if (parsed && typeof parsed === 'object') {
+        const found = this.findCandidate(parsed as Record<string, unknown>);
+        if (found) {
+          return found;
+        }
       }
     }
 
-    if (payload.data && typeof payload.data === 'object') {
-      const nested = payload.data as { stage?: string; status?: string };
-      if (nested.stage || nested.status) {
-        return nested;
-      }
-    }
-
-    return payload;
+    return null;
   }
 
   private formatDate(date: Date): string {
