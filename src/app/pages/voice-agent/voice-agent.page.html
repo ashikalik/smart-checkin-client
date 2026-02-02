@@ -1,0 +1,88 @@
+<ion-header>
+  <ion-toolbar>
+    <span
+      class="connection-dot"
+      [class.connected]="voiceAgent.status() === 'connected'"
+      [class.disconnected]="voiceAgent.status() === 'disconnected'"
+      slot="start"
+    ></span>
+    <ion-badge class="mode-badge" slot="start" *ngIf="voiceAgent.mode() === 'listening'">
+      <span class="mode-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </span>
+    </ion-badge>
+    <ion-badge class="mode-badge" slot="start" *ngIf="voiceAgent.mode() === 'speaking'">
+      <ion-icon name="volume-high"></ion-icon>
+    </ion-badge>
+    <ion-title>Smart Check In</ion-title>
+    <ion-button slot="end" fill="clear" size="small" (click)="toggleSession()">
+      <ion-icon
+        [name]="voiceAgent.status() === 'connected' || voiceAgent.status() === 'connecting' ? 'stop-circle' : 'play-circle'"
+      ></ion-icon>
+    </ion-button>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="voice-agent-content" [fullscreen]="true" scrollY="true">
+  <div class="status-bar">
+    <!-- <ion-text *ngIf="voiceAgent.conversationId()" class="conversation-id">{{ voiceAgent.conversationId() }}</ion-text> -->
+  </div>
+
+  <ion-list class="message-list">
+    <ion-item lines="none" class="message-item journey-card-item" *ngIf="voiceAgent.journeyCard()">
+      <app-journey-card [data]="voiceAgent.journeyCard()!"></app-journey-card>
+    </ion-item>
+    <ion-item
+      *ngFor="let message of voiceAgent.messages()"
+      class="message-item"
+      [class.user-bubble]="message.role === 'user'"
+    >
+      <ion-label>
+        <div class="bubble" [class.user]="message.role === 'user'">
+          <p class="message-text">{{ message.text }}</p>
+        </div>
+      </ion-label>
+    </ion-item>
+
+    <ion-item class="message-item user-bubble live-bubble" *ngIf="voiceAgent.liveUserText() !== null">
+      <ion-label>
+        <div class="bubble user live">
+          <ng-container *ngIf="voiceAgent.liveUserText(); else userDots">
+            <p class="message-text">{{ voiceAgent.liveUserText() }}</p>
+          </ng-container>
+          <ng-template #userDots>
+            <ion-spinner name="dots" class="live-dots"></ion-spinner>
+          </ng-template>
+        </div>
+      </ion-label>
+    </ion-item>
+
+    <ion-item class="message-item live-bubble" *ngIf="voiceAgent.liveAgentText() !== null">
+      <ion-label>
+        <div class="bubble live">
+          <ng-container *ngIf="voiceAgent.liveAgentText(); else agentDots">
+            <p class="message-text">{{ voiceAgent.liveAgentText() }}</p>
+          </ng-container>
+          <ng-template #agentDots>
+            <ion-spinner name="dots" class="live-dots"></ion-spinner>
+          </ng-template>
+        </div>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+</ion-content>
+
+<ion-footer>
+  <div class="input-row">
+    <ion-input
+      [(ngModel)]="inputText"
+      placeholder="Type a message"
+      (keyup.enter)="sendMessage()"
+    ></ion-input>
+    <ion-button class="footer-send" fill="clear" (click)="sendMessage()" [disabled]="voiceAgent.isSending() || !inputText.trim()">
+      <ion-icon [name]="'play-circle'"></ion-icon>
+    </ion-button>
+  </div>
+</ion-footer>
