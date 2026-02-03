@@ -100,7 +100,13 @@ export class AgentSessionService {
         return false;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
       stream.getTracks().forEach((track) => track.stop());
       return true;
     } catch (error) {

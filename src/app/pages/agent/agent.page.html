@@ -23,20 +23,22 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="agent-content" [fullscreen]="true" scrollY="true">
-  <div class="status-bar">
-    <!-- <ion-text *ngIf="conversationId" class="conversation-id">{{ conversationId }}</ion-text> -->
-  </div>
+<ion-content class="agent-content" [fullscreen]="true" scrollY="false">
+  <div #chatScroll class="chat-scroll">
+    <div class="status-bar">
+      <!-- <ion-text *ngIf="conversationId" class="conversation-id">{{ conversationId }}</ion-text> -->
+    </div>
 
-  <ion-list class="message-list">
-    <ion-item *ngFor="let message of messages" class="message-item" [class.user-bubble]="message.role === 'user'">
-      <ion-label>
-        <div class="bubble" [class.user]="message.role === 'user'">
-          <p class="message-text">{{ message.text }}</p>
-        </div>
-      </ion-label>
-    </ion-item>
-  </ion-list>
+    <ion-list class="message-list">
+      <ion-item *ngFor="let message of messages" class="message-item" [class.user-bubble]="message.role === 'user'">
+        <ion-label>
+          <div class="bubble" [class.user]="message.role === 'user'">
+            <p class="message-text">{{ message.text }}</p>
+          </div>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
 </ion-content>
 
 <ion-footer>

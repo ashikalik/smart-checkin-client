@@ -14,6 +14,8 @@ export class VoiceAgentService {
   private lastFinalizedUserText = '';
   private lastFinalizedAgentText = '';
   private pendingAgentFinalText: string | null = null;
+  private hasSpokenForTurn = false;
+  private agentMessageStreak = 0;
 
   readonly isConnecting = signal(false);
   readonly isSending = signal(false);
@@ -51,6 +53,8 @@ export class VoiceAgentService {
     this.lastFinalizedUserText = '';
     this.lastFinalizedAgentText = '';
     this.pendingAgentFinalText = null;
+    this.hasSpokenForTurn = false;
+    this.agentMessageStreak = 0;
 
     try {
       await this.agentSession.startSession({
@@ -113,6 +117,7 @@ export class VoiceAgentService {
 
     this.chat.addMessage({ role: 'user', text: trimmed });
     this.lastHandledUserMessage = trimmed;
+    this.agentMessageStreak = 0;
     void this.handleApiTurn(trimmed);
   }
 
@@ -151,6 +156,7 @@ export class VoiceAgentService {
     if (payload.role === 'user' && !this.isSending()) {
       if (message !== this.lastHandledUserMessage) {
         this.lastHandledUserMessage = message;
+        this.agentMessageStreak = 0;
         void this.handleApiTurn(message);
       }
     }
@@ -158,6 +164,10 @@ export class VoiceAgentService {
 
   private async handleApiTurn(goal: string): Promise<void> {
     this.isSending.set(true);
+    this.hasSpokenForTurn = false;
+    this.agentSession.sendContextualUpdate(
+      'System update: An API call is in progress. Do NOT ask additional questions until the response is received.'
+    );
     try {
       const reply = await this.checkinApi.callCheckinApi(goal);
       const journeyCard = this.journeyCardFormatter.buildFromResponse(reply.raw);
@@ -186,6 +196,9 @@ export class VoiceAgentService {
       console.error('Check-in API error:', error);
       this.chat.addSystemMessage('Failed to reach the check-in service.');
     } finally {
+      this.agentSession.sendContextualUpdate(
+        'System update: API call completed. You may continue the conversation.'
+      );
       this.isSending.set(false);
     }
   }
@@ -197,9 +210,14 @@ export class VoiceAgentService {
     if (this.agentSession.mode() === 'speaking') {
       return;
     }
+    if (this.hasSpokenForTurn) {
+      this.pendingSpeakText = null;
+      return;
+    }
 
     const text = this.pendingSpeakText;
     this.pendingSpeakText = null;
+    this.hasSpokenForTurn = true;
     this.agentSession.sendUserMessage(`Say exactly the following sentence and nothing else: "${text}"`);
   }
 
@@ -232,8 +250,11 @@ export class VoiceAgentService {
 
     if (role === 'user') {
       this.lastFinalizedUserText = text;
+      this.agentMessageStreak = 0;
     } else {
       this.lastFinalizedAgentText = text;
+      this.agentMessageStreak += 1;
+      this.checkAgentStreak();
     }
 
     this.chat.addMessage({ role, text });
@@ -247,6 +268,23 @@ export class VoiceAgentService {
     const text = this.pendingAgentFinalText;
     this.pendingAgentFinalText = null;
     this.lastFinalizedAgentText = text;
+    this.agentMessageStreak += 1;
+    this.checkAgentStreak();
     this.chat.addMessage({ role: 'agent', text });
+  }
+
+  private checkAgentStreak(): void {
+    if (this.agentMessageStreak < 5) {
+      return;
+    }
+
+    const text = 'No response from your side, disconnecting';
+    this.chat.addMessage({ role: 'agent', text });
+    if (this.agentSession.isOpen()) {
+      this.pendingSpeakText = text;
+      this.trySendSpeakPrompt();
+    }
+    void this.endSession();
+    this.agentMessageStreak = 0;
   }
 }

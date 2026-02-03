@@ -25,53 +25,67 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="voice-agent-content" [fullscreen]="true" scrollY="true">
+<ion-content class="voice-agent-content" [fullscreen]="true" scrollY="false">
   <div class="status-bar">
     <!-- <ion-text *ngIf="voiceAgent.conversationId()" class="conversation-id">{{ voiceAgent.conversationId() }}</ion-text> -->
   </div>
 
-  <ion-list class="message-list">
-    <ion-item lines="none" class="message-item journey-card-item" *ngIf="voiceAgent.journeyCard()">
-      <app-journey-card [data]="voiceAgent.journeyCard()!"></app-journey-card>
-    </ion-item>
-    <ion-item
-      *ngFor="let message of voiceAgent.messages()"
-      class="message-item"
-      [class.user-bubble]="message.role === 'user'"
-    >
-      <ion-label>
-        <div class="bubble" [class.user]="message.role === 'user'">
-          <p class="message-text">{{ message.text }}</p>
-        </div>
-      </ion-label>
-    </ion-item>
+  <cdk-virtual-scroll-viewport
+    class="chat-viewport"
+    [itemSize]="itemSize"
+    (scrolledIndexChange)="onViewportScroll()"
+  >
+    <ng-container *cdkVirtualFor="let item of displayItems; trackBy: trackByIndex">
+      <ng-container [ngSwitch]="item.type">
+        <ion-item lines="none" class="message-item journey-card-item" *ngSwitchCase="'journey'">
+          <app-journey-card [data]="asJourney(item)!"></app-journey-card>
+        </ion-item>
 
-    <ion-item class="message-item user-bubble live-bubble" *ngIf="voiceAgent.liveUserText() !== null">
-      <ion-label>
-        <div class="bubble user live">
-          <ng-container *ngIf="voiceAgent.liveUserText(); else userDots">
-            <p class="message-text">{{ voiceAgent.liveUserText() }}</p>
-          </ng-container>
-          <ng-template #userDots>
-            <ion-spinner name="dots" class="live-dots"></ion-spinner>
-          </ng-template>
-        </div>
-      </ion-label>
-    </ion-item>
+        <ion-item class="message-item" [class.user-bubble]="asMessage(item)?.role === 'user'" *ngSwitchCase="'message'">
+          <ion-label>
+            <div class="bubble" [class.user]="asMessage(item)?.role === 'user'">
+              <p class="message-text">{{ asMessage(item)?.text }}</p>
+            </div>
+          </ion-label>
+        </ion-item>
 
-    <ion-item class="message-item live-bubble" *ngIf="voiceAgent.liveAgentText() !== null">
-      <ion-label>
-        <div class="bubble live">
-          <ng-container *ngIf="voiceAgent.liveAgentText(); else agentDots">
-            <p class="message-text">{{ voiceAgent.liveAgentText() }}</p>
-          </ng-container>
-          <ng-template #agentDots>
-            <ion-spinner name="dots" class="live-dots"></ion-spinner>
-          </ng-template>
-        </div>
-      </ion-label>
-    </ion-item>
-  </ion-list>
+        <ion-item class="message-item user-bubble live-bubble" *ngSwitchCase="'live-user'">
+          <ion-label>
+            <div class="bubble user live">
+              <ng-container *ngIf="asLiveText(item); else userDots">
+                <p class="message-text">{{ asLiveText(item) }}</p>
+              </ng-container>
+              <ng-template #userDots>
+                <ion-spinner name="dots" class="live-dots"></ion-spinner>
+              </ng-template>
+            </div>
+          </ion-label>
+        </ion-item>
+
+        <ion-item class="message-item live-bubble" *ngSwitchCase="'live-agent'">
+          <ion-label>
+            <div class="bubble live">
+              <ng-container *ngIf="asLiveText(item); else agentDots">
+                <p class="message-text">{{ asLiveText(item) }}</p>
+              </ng-container>
+              <ng-template #agentDots>
+                <ion-spinner name="dots" class="live-dots"></ion-spinner>
+              </ng-template>
+            </div>
+          </ion-label>
+        </ion-item>
+      </ng-container>
+    </ng-container>
+  </cdk-virtual-scroll-viewport>
+
+  <ion-button
+    *ngIf="hasNewMessages"
+    class="new-message-indicator"
+    size="small"
+    (click)="jumpToLatest()"
+  >
+    New message
+  </ion-button>
 </ion-content>
 
 <ion-footer>
