@@ -7,6 +7,7 @@ import {
   IonTitle,
   IonContent,
   IonButton,
+  IonList,
   IonItem,
   IonLabel,
   IonInput,
@@ -15,13 +16,16 @@ import {
   IonIcon,
   IonSpinner,
 } from '@ionic/angular/standalone';
-import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 import { addIcons } from 'ionicons';
 import { playCircle, stopCircle, volumeHigh } from 'ionicons/icons';
 import { VoiceAgentService } from '../../services/voice-agent/voice-agent.service';
-import type { JourneyCardData } from '../../services/voice-agent/journey-card.types';
 import type { ConversationMessage } from '../../services/voice-agent/chat.service';
+import type { JourneyCardData } from '../../services/voice-agent/journey-card.types';
+import type { PassengerCardData } from '../../services/voice-agent/passenger-card.types';
+import type { BoardingPassCardData } from '../../services/voice-agent/boarding-pass.types';
 import { JourneyCardComponent } from '../../components/journey-card/journey-card.component';
+import { PassengerListCardComponent } from '../../components/passenger-list-card/passenger-list-card.component';
+import { BoardingPassCarouselComponent } from '../../components/boarding-pass-carousel/boarding-pass-carousel.component';
 
 @Component({
   selector: 'app-voice-agent',
@@ -36,6 +40,7 @@ import { JourneyCardComponent } from '../../components/journey-card/journey-card
     IonTitle,
     IonContent,
     IonButton,
+    IonList,
     IonItem,
     IonLabel,
     IonInput,
@@ -43,22 +48,20 @@ import { JourneyCardComponent } from '../../components/journey-card/journey-card
     IonBadge,
     IonIcon,
     IonSpinner,
-    ScrollingModule,
     JourneyCardComponent,
+    PassengerListCardComponent,
+    BoardingPassCarouselComponent,
   ],
 })
 export class VoiceAgentPage implements OnInit, OnDestroy {
   @ViewChild(IonContent) private content?: IonContent;
-  @ViewChild(CdkVirtualScrollViewport) private viewport?: CdkVirtualScrollViewport;
 
   inputText = '';
   private autoScrollEnabled = true;
   hasNewMessages = false;
   private lastMessageCount = 0;
   private lastHasJourneyCard = false;
-  readonly itemSize = 88;
 
-  private readonly emptyItems: DisplayItem[] = [];
 
   constructor(public readonly voiceAgent: VoiceAgentService) {
     addIcons({ playCircle, stopCircle, volumeHigh });
@@ -118,11 +121,15 @@ export class VoiceAgentPage implements OnInit, OnDestroy {
     this.voiceAgent.toggleSession();
   }
 
-  onViewportScroll(): void {
-    if (!this.viewport) {
+  onContentScroll(event: CustomEvent): void {
+    const detail = event.detail as { scrollTop?: number; scrollHeight?: number; clientHeight?: number } | undefined;
+    if (!detail) {
       return;
     }
-    const distanceFromBottom = this.viewport.measureScrollOffset('bottom');
+    const scrollTop = detail.scrollTop ?? 0;
+    const scrollHeight = detail.scrollHeight ?? 0;
+    const clientHeight = detail.clientHeight ?? 0;
+    const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
     this.autoScrollEnabled = distanceFromBottom < 48;
     if (this.autoScrollEnabled) {
       this.hasNewMessages = false;
@@ -136,21 +143,17 @@ export class VoiceAgentPage implements OnInit, OnDestroy {
   }
 
   private scrollToBottom(): void {
-    if (!this.viewport) {
+    if (!this.content) {
       return;
     }
 
     setTimeout(() => {
-      this.viewport?.scrollToIndex(Math.max(0, this.displayItems.length - 1), 'smooth');
+      this.content?.scrollToBottom(250);
     }, 50);
   }
 
   get displayItems(): DisplayItem[] {
     const items: DisplayItem[] = [];
-
-    if (this.voiceAgent.journeyCard()) {
-      items.push({ type: 'journey', payload: this.voiceAgent.journeyCard() as JourneyCardData });
-    }
 
     this.voiceAgent.messages().forEach((message) => {
       items.push({ type: 'message', payload: message });
@@ -164,19 +167,36 @@ export class VoiceAgentPage implements OnInit, OnDestroy {
       items.push({ type: 'live-agent', payload: this.voiceAgent.liveAgentText() });
     }
 
-    return items.length ? items : this.emptyItems;
+    return items;
   }
 
   trackByIndex(index: number): number {
     return index;
   }
 
-  asJourney(item: DisplayItem): JourneyCardData | null {
-    return item.type === 'journey' ? item.payload : null;
-  }
-
   asMessage(item: DisplayItem): ConversationMessage | null {
     return item.type === 'message' ? item.payload : null;
+  }
+
+  asJourneyData(message: ConversationMessage | null): JourneyCardData | null {
+    if (!message || message.type !== 'journey-card') {
+      return null;
+    }
+    return message.data as JourneyCardData;
+  }
+
+  asPassengerData(message: ConversationMessage | null): PassengerCardData | null {
+    if (!message || message.type !== 'passenger-list') {
+      return null;
+    }
+    return message.data as PassengerCardData;
+  }
+
+  asBoardingPassData(message: ConversationMessage | null): BoardingPassCardData | null {
+    if (!message || message.type !== 'boarding-pass') {
+      return null;
+    }
+    return message.data as BoardingPassCardData;
   }
 
   asLiveText(item: DisplayItem): string | null {
@@ -188,7 +208,6 @@ export class VoiceAgentPage implements OnInit, OnDestroy {
 }
 
 type DisplayItem =
-  | { type: 'journey'; payload: JourneyCardData }
   | { type: 'message'; payload: ConversationMessage }
   | { type: 'live-user'; payload: string | null }
   | { type: 'live-agent'; payload: string | null };

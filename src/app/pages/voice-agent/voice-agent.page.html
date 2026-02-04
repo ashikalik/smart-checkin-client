@@ -25,58 +25,70 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="voice-agent-content" [fullscreen]="true" scrollY="false">
+<ion-content class="voice-agent-content" [fullscreen]="true" scrollY="true" scrollEvents="true" (ionScroll)="onContentScroll($event)">
   <div class="status-bar">
     <!-- <ion-text *ngIf="voiceAgent.conversationId()" class="conversation-id">{{ voiceAgent.conversationId() }}</ion-text> -->
   </div>
 
-  <cdk-virtual-scroll-viewport
-    class="chat-viewport"
-    [itemSize]="itemSize"
-    (scrolledIndexChange)="onViewportScroll()"
-  >
-    <ng-container *cdkVirtualFor="let item of displayItems; trackBy: trackByIndex">
-      <ng-container [ngSwitch]="item.type">
-        <ion-item lines="none" class="message-item journey-card-item" *ngSwitchCase="'journey'">
-          <app-journey-card [data]="asJourney(item)!"></app-journey-card>
-        </ion-item>
-
-        <ion-item class="message-item" [class.user-bubble]="asMessage(item)?.role === 'user'" *ngSwitchCase="'message'">
-          <ion-label>
-            <div class="bubble" [class.user]="asMessage(item)?.role === 'user'">
-              <p class="message-text">{{ asMessage(item)?.text }}</p>
+  <ion-list class="message-list">
+    <ion-item
+      *ngFor="let item of displayItems; trackBy: trackByIndex"
+      class="message-item"
+      [class.user-bubble]="asMessage(item)?.role === 'user'"
+      [class.journey-card-item]="asMessage(item)?.type === 'journey-card' || asMessage(item)?.type === 'passenger-list' || asMessage(item)?.type === 'boarding-pass'"
+    >
+      <ion-label>
+        <ng-container *ngIf="item.type === 'message'">
+          <ng-container *ngIf="asMessage(item)?.type === 'journey-card'; else passengerOrText">
+            <div class="journey-wrapper">
+              <app-journey-card [data]="asJourneyData(asMessage(item))!"></app-journey-card>
             </div>
-          </ion-label>
-        </ion-item>
-
-        <ion-item class="message-item user-bubble live-bubble" *ngSwitchCase="'live-user'">
-          <ion-label>
-            <div class="bubble user live">
-              <ng-container *ngIf="asLiveText(item); else userDots">
-                <p class="message-text">{{ asLiveText(item) }}</p>
+          </ng-container>
+          <ng-template #passengerOrText>
+            <ng-container *ngIf="asMessage(item)?.type === 'passenger-list'; else boardingOrText">
+              <div class="journey-wrapper">
+                <app-passenger-list-card [data]="asPassengerData(asMessage(item))!"></app-passenger-list-card>
+              </div>
+            </ng-container>
+            <ng-template #boardingOrText>
+              <ng-container *ngIf="asMessage(item)?.type === 'boarding-pass'; else textMessage">
+                <div class="journey-wrapper">
+                  <app-boarding-pass-carousel [data]="asBoardingPassData(asMessage(item))!"></app-boarding-pass-carousel>
+                </div>
               </ng-container>
-              <ng-template #userDots>
-                <ion-spinner name="dots" class="live-dots"></ion-spinner>
+              <ng-template #textMessage>
+                <div class="bubble" [class.user]="asMessage(item)?.role === 'user'">
+                  <p class="message-text">{{ asMessage(item)?.text }}</p>
+                </div>
               </ng-template>
-            </div>
-          </ion-label>
-        </ion-item>
+            </ng-template>
+          </ng-template>
+        </ng-container>
 
-        <ion-item class="message-item live-bubble" *ngSwitchCase="'live-agent'">
-          <ion-label>
-            <div class="bubble live">
-              <ng-container *ngIf="asLiveText(item); else agentDots">
-                <p class="message-text">{{ asLiveText(item) }}</p>
-              </ng-container>
-              <ng-template #agentDots>
-                <ion-spinner name="dots" class="live-dots"></ion-spinner>
-              </ng-template>
-            </div>
-          </ion-label>
-        </ion-item>
-      </ng-container>
-    </ng-container>
-  </cdk-virtual-scroll-viewport>
+        <ng-container *ngIf="item.type === 'live-user'">
+          <div class="bubble user live">
+            <ng-container *ngIf="asLiveText(item); else userDots">
+              <p class="message-text">{{ asLiveText(item) }}</p>
+            </ng-container>
+            <ng-template #userDots>
+              <ion-spinner name="dots" class="live-dots"></ion-spinner>
+            </ng-template>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="item.type === 'live-agent'">
+          <div class="bubble live">
+            <ng-container *ngIf="asLiveText(item); else agentDots">
+              <p class="message-text">{{ asLiveText(item) }}</p>
+            </ng-container>
+            <ng-template #agentDots>
+              <ion-spinner name="dots" class="live-dots"></ion-spinner>
+            </ng-template>
+          </div>
+        </ng-container>
+      </ion-label>
+    </ion-item>
+  </ion-list>
 
   <ion-button
     *ngIf="hasNewMessages"

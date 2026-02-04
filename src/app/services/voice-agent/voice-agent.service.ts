@@ -5,6 +5,10 @@ import { ChatService } from './chat.service';
 import { CheckinApiService } from './checkin-api.service';
 import { JourneyCardFormatterService } from './journey-card-formatter.service';
 import { JourneyCardData } from './journey-card.types';
+import { PassengerCardFormatterService } from './passenger-card-formatter.service';
+import { PassengerCardData } from './passenger-card.types';
+import { BoardingPassFormatterService } from './boarding-pass-formatter.service';
+import { BoardingPassCardData } from './boarding-pass.types';
 
 @Injectable({ providedIn: 'root' })
 export class VoiceAgentService {
@@ -25,7 +29,9 @@ export class VoiceAgentService {
     private readonly agentSession: AgentSessionService,
     private readonly chat: ChatService,
     private readonly checkinApi: CheckinApiService,
-    private readonly journeyCardFormatter: JourneyCardFormatterService
+    private readonly journeyCardFormatter: JourneyCardFormatterService,
+    private readonly passengerCardFormatter: PassengerCardFormatterService,
+    private readonly boardingPassFormatter: BoardingPassFormatterService
   ) {}
 
   readonly messages = this.chat.messages;
@@ -115,7 +121,7 @@ export class VoiceAgentService {
       void this.startSession();
     }
 
-    this.chat.addMessage({ role: 'user', text: trimmed });
+    this.chat.addMessage({ role: 'user', text: trimmed, type: 'text' });
     this.lastHandledUserMessage = trimmed;
     this.agentMessageStreak = 0;
     void this.handleApiTurn(trimmed);
@@ -151,7 +157,7 @@ export class VoiceAgentService {
       return;
     }
 
-    this.chat.addMessage({ role: payload.role, text: message });
+    this.chat.addMessage({ role: payload.role, text: message, type: 'text' });
 
     if (payload.role === 'user' && !this.isSending()) {
       if (message !== this.lastHandledUserMessage) {
@@ -172,6 +178,19 @@ export class VoiceAgentService {
       const reply = await this.checkinApi.callCheckinApi(goal);
       const journeyCard = this.journeyCardFormatter.buildFromResponse(reply.raw);
       this.journeyCard.set(journeyCard);
+      if (journeyCard) {
+        this.chat.addMessage({ role: 'agent', text: '', type: 'journey-card', data: journeyCard });
+      }
+      const passengerCard = this.passengerCardFormatter.buildFromResponse(reply.raw);
+      if (passengerCard) {
+        this.chat.addMessage({ role: 'agent', text: passengerCard.prompt, type: 'text' });
+        this.chat.addMessage({ role: 'agent', text: '', type: 'passenger-list', data: passengerCard });
+      }
+      const boardingPassCard = this.boardingPassFormatter.buildFromResponse(reply.raw);
+      if (boardingPassCard) {
+        this.chat.addMessage({ role: 'agent', text: boardingPassCard.prompt, type: 'text' });
+        this.chat.addMessage({ role: 'agent', text: '', type: 'boarding-pass', data: boardingPassCard });
+      }
       let userMessage = reply.userMessage;
       if (!userMessage && journeyCard) {
         userMessage = `Check-in is open for ${journeyCard.origin} to ${journeyCard.destination}. ` +
@@ -182,7 +201,7 @@ export class VoiceAgentService {
           this.pendingSpeakText = userMessage;
           this.trySendSpeakPrompt();
         } else {
-          this.chat.addMessage({ role: 'agent', text: userMessage });
+          this.chat.addMessage({ role: 'agent', text: userMessage, type: 'text' });
         }
       } else {
         if (this.agentSession.isOpen()) {
@@ -257,7 +276,7 @@ export class VoiceAgentService {
       this.checkAgentStreak();
     }
 
-    this.chat.addMessage({ role, text });
+    this.chat.addMessage({ role, text, type: 'text' });
   }
 
   private flushPendingAgentText(): void {
@@ -270,16 +289,16 @@ export class VoiceAgentService {
     this.lastFinalizedAgentText = text;
     this.agentMessageStreak += 1;
     this.checkAgentStreak();
-    this.chat.addMessage({ role: 'agent', text });
+    this.chat.addMessage({ role: 'agent', text, type: 'text' });
   }
 
   private checkAgentStreak(): void {
-    if (this.agentMessageStreak < 5) {
+    if (this.agentMessageStreak < 10) {
       return;
     }
 
     const text = 'No response from your side, disconnecting';
-    this.chat.addMessage({ role: 'agent', text });
+    this.chat.addMessage({ role: 'agent', text, type: 'text' });
     if (this.agentSession.isOpen()) {
       this.pendingSpeakText = text;
       this.trySendSpeakPrompt();

@@ -3,6 +3,8 @@ import { Injectable, signal } from '@angular/core';
 export interface ConversationMessage {
   role: 'user' | 'agent';
   text: string;
+  type?: 'text' | 'journey-card' | 'passenger-list' | 'boarding-pass';
+  data?: unknown;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -20,14 +22,14 @@ export class ChatService {
   addMessage(message: ConversationMessage): void {
     const items = this.messages();
     const last = items.length ? items[items.length - 1] : undefined;
-    if (last && last.role === message.role && last.text === message.text) {
+    if (last && last.role === message.role && last.text === message.text && last.type === message.type) {
       return;
     }
     this.messages.set([...items, message]);
   }
 
   addSystemMessage(text: string): void {
-    this.addMessage({ role: 'agent', text });
+    this.addMessage({ role: 'agent', text, type: 'text' });
   }
 
   setLive(role: ConversationMessage['role'], text: string | null): void {
