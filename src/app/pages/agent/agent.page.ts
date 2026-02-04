@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -49,6 +49,7 @@ interface ConversationMessage {
 })
 export class AgentPage implements OnInit, OnDestroy {
   @ViewChild(IonContent) private content?: IonContent;
+  @ViewChild('chatScroll', { read: ElementRef }) private chatScroll?: ElementRef<HTMLElement>;
 
   private readonly sessionStorageKey = 'smart-checkin-session-id';
   readonly agentId = 'agent_4101kga7dg1cecjadpd4h4mtg1e5';
@@ -268,8 +269,13 @@ export class AgentPage implements OnInit, OnDestroy {
   }
 
   private scrollToBottom(): void {
+    const container = this.chatScroll?.nativeElement;
+    if (!container) {
+      return;
+    }
+
     setTimeout(() => {
-      this.content?.scrollToBottom(250);
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     }, 50);
   }
 

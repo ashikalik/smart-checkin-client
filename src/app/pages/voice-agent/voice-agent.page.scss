@@ -1,17 +1,21 @@
 .voice-agent-content {
-  --padding-top: 20px;
-  --padding-bottom: 20px;
+  --padding-top: 2px;
+  --padding-bottom: 2px;
   --padding-start: 20px;
   --padding-end: 20px;
   --background: var(--etihad-background);
   background: var(--etihad-background);
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .status-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+  height: 0;
 }
 
 .conversation-id {
@@ -22,7 +26,9 @@
 .message-list {
   background: transparent;
   --background: transparent;
-  margin-bottom: 140px;
+  margin-bottom: 0;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .message-item {
@@ -36,6 +42,12 @@
 
 .journey-card-item::part(native) {
   padding: 0;
+  min-height: 220px;
+}
+
+.journey-wrapper {
+  width: 100%;
+  padding: 4px 0;
 }
 
 .message-item ion-label {
@@ -55,7 +67,7 @@
 }
 
 .message-item::part(native) {
-  padding: 0;
+  padding: 0 4px;
   display: flex;
   justify-content: flex-start;
 }
@@ -118,11 +130,27 @@
   color: var(--etihad-charcoal);
 }
 
+.new-message-indicator {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  z-index: 5;
+  --background: var(--etihad-gold);
+  --color: #ffffff;
+  --border-radius: 16px;
+  --box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+  width: fit-content;
+  display: block;
+}
+
 ion-footer {
   background: #ffffff;
   padding: 6px 10px;
   box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.08);
 }
+
 
 .controls {
   display: flex;
@@ -189,6 +217,7 @@ ion-toolbar ion-button {
   --box-shadow: none;
 }
 
+
 ion-toolbar ion-icon {
   font-size: 26px;
 }
@@ -251,6 +280,7 @@ ion-button[color='danger'] {
 .footer-send ion-icon {
   color: var(--etihad-gold);
 }
+
 
 .mode-badge {
   --background: #2f2f2f;
